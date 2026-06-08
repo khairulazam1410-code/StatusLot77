@@ -16,31 +16,45 @@ st.info("""
 # Hubungkan ke Google Sheets
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-# Baca data dari Google Sheets
-df = conn.read(
-    spreadsheet="https://docs.google.com/spreadsheets/d/1hb9sbIXB7PSlFNe57l1stMFyXat55Mw88cWfQJy99kc/edit", 
-    worksheet="Lot77", 
-    usecols=[0, 1, 2, 3, 4]
-)
+# URL Google Sheets diletakkan secara terus untuk kestabilan capaian API
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1hb9sbIXB7PSlFNe57l1stMFyXat55Mw88cWfQJy99kc/edit"
 
-# Pastikan kolum checkbox dibaca sebagai boolean (True/False)
-checkbox_cols = ['Tarik Kaveat', 'Bayaran SPA', 'Bayaran POT']
-for col in checkbox_cols:
-    df[col] = df[col].astype(bool)
+try:
+    # Baca data dari Google Sheets
+    df = conn.read(
+        spreadsheet=SHEET_URL,
+        worksheet="Lot77"
+    )
 
-st.write("Sila tanda (tick) pada ruang yang berkaitan di bawah:")
+    # Pastikan kolum checkbox dibaca sebagai boolean (True/False)
+    # Gunakan fungsi semakan 'if' supaya sistem tidak ralat jika ejaan kolum lari sedikit
+    checkbox_cols = ['Tarik Kaveat', 'Bayaran SPA', 'Bayaran POT']
+    for col in checkbox_cols:
+        if col in df.columns:
+            df[col] = df[col].astype(bool)
 
-# Paparkan jadual interaktif (st.data_editor)
-edited_df = st.data_editor(
-    df,
-    hide_index=True,
-    disabled=["Plot", "Nama"], # Kunci kolum Plot dan Nama dari disunting
-    use_container_width=True
-)
+    st.write("Sila tanda (tick) pada ruang yang berkaitan di bawah:")
 
-# Butang untuk simpan perubahan ke Google Sheets
-if st.button("Simpan Perubahan"):
-    # Kemas kini data di Google Sheets
-    conn.update(worksheet="Lot77", data=edited_df)
-    st.success("Data berjaya dikemas kini di Google Sheets!")
-    st.cache_data.clear() # Bersihkan cache supaya data terbaru dimuat pada sesi seterusnya
+    # Paparkan jadual interaktif (st.data_editor)
+    edited_df = st.data_editor(
+        df,
+        hide_index=True,
+        disabled=["Plot", "Nama"], # Kunci kolum Plot dan Nama dari disunting oleh viewer
+        use_container_width=True
+    )
+
+    # Butang untuk simpan perubahan ke Google Sheets
+    if st.button("Simpan Perubahan"):
+        # Kemas kini data di Google Sheets
+        conn.update(
+            worksheet="Lot77", 
+            data=edited_df,
+            spreadsheet=SHEET_URL
+        )
+        st.success("Data berjaya dikemas kini di Google Sheets!")
+        st.cache_data.clear() # Bersihkan cache supaya data terbaru dimuat pada sesi seterusnya
+
+except Exception as e:
+    # Paparan ralat jika sambungan masih gagal
+    st.error(f"Ralat sambungan: {e}")
+    st.warning("Sila pastikan kod 'Secrets' mengandungi format petik tiga pada private_key dan 'Reboot app' telah ditekan.")
