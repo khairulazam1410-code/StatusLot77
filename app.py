@@ -1,6 +1,7 @@
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 import pandas as pd
+import traceback
 
 st.set_page_config(page_title="Status Lot 77", layout="wide")
 st.title("Pengurusan Status Lot 77")
@@ -11,12 +12,15 @@ st.info("""
 * **Bayaran POT:** Gunakan rujukan `POT77/Plot No.` (contoh: POT77/23). Bayaran ke akaun Ambank Shamsul Rijal & Associates.
 """)
 
-# Hubungkan ke Google Sheets
-conn = st.connection("gsheets", type=GSheetsConnection)
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1hb9sbIXB7PSlFNe57l1stMFyXat55Mw88cWfQJy99kc/edit"
-
 try:
-    # ttl=0 MEMAKSA Streamlit membaca data baharu dan melupakan ralat lama
+    # Bersihkan cache sambungan yang mungkin tersangkut pada sesi lama
+    st.cache_resource.clear()
+    
+    # Hubungkan ke Google Sheets
+    conn = st.connection("gsheets", type=GSheetsConnection)
+    SHEET_URL = "https://docs.google.com/spreadsheets/d/1hb9sbIXB7PSlFNe57l1stMFyXat55Mw88cWfQJy99kc/edit"
+
+    # Baca jadual
     df = conn.read(
         spreadsheet=SHEET_URL,
         worksheet="Lot77",
@@ -47,4 +51,5 @@ try:
         st.cache_data.clear()
 
 except Exception as e:
-    st.error(f"Ralat sistem: {e}")
+    st.error("Sistem mengesan ralat. Sila semak butiran teknikal di bawah:")
+    st.code(traceback.format_exc())
