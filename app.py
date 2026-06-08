@@ -17,7 +17,11 @@ st.info("""
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 # Baca data dari Google Sheets
-df = conn.read(worksheet="Lot77", usecols=[0, 1, 2, 3, 4])
+df = conn.read(
+    spreadsheet="https://docs.google.com/spreadsheets/d/1hb9sbIXB7PSlFNe57l1stMFyXat55Mw88cWfQJy99kc/edit", 
+    worksheet="Lot77", 
+    usecols=[0, 1, 2, 3, 4]
+)
 
 # Pastikan kolum checkbox dibaca sebagai boolean (True/False)
 checkbox_cols = ['Tarik Kaveat', 'Bayaran SPA', 'Bayaran POT']
